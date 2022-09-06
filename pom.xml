@@ -16,6 +16,7 @@
         <module>hadoop-selfdefine-fileinputformat</module>
         <module>hadoop-mapreduce-antiguigu-case</module>
         <module>kafka-antiguigu-case</module>
+        <module>hbase-antiguigu-case</module>
     </modules>
 
     <properties>
