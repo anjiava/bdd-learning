@@ -1,0 +1,4 @@
+this is a text file.
+hello world!
+python is good!
+today is a good day.
