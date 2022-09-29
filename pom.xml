@@ -17,6 +17,7 @@
         <module>hadoop-mapreduce-antiguigu-case</module>
         <module>kafka-antiguigu-case</module>
         <module>hbase-antiguigu-case</module>
+        <module>atiguigu-electronic-commerce-dataware</module>
     </modules>
 
     <properties>
