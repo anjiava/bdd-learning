@@ -3,6 +3,7 @@ package org.mili.interceptors;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.interceptor.Interceptor;
+import org.mili.LogUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;

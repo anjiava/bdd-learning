@@ -204,7 +204,7 @@ public class AppMain {
         display.setPlace(String.valueOf(rand.nextInt(6)));
         display.setExtend1(String.valueOf(rand.nextInt(2) + 1));
         display.setCategory(String.valueOf(rand.nextInt(100) + 1));
-        return packEventJson("display", newsIdLen);
+        return packEventJson("display", display);
     }
 
     private static JSONObject generateStartLog() {
