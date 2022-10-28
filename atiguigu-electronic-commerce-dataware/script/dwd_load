@@ -1,0 +1,112 @@
+#!/bin/bash
+APP=gmall
+hive=/opt/bdd/hive-1.2.1/bin/hive
+
+if [ -n "$1" ]
+then
+        log_date=$1
+else
+        log_date=`date -d "-1 day" +%F`
+fi
+
+declare -A arr
+arr['display']="    get_json_object(event_json,'$.kv.action') action,
+    get_json_object(event_json,'$.kv.newsid') newsid,
+    get_json_object(event_json,'$.kv.place') place,
+    get_json_object(event_json,'$.kv.extend1') extend1,
+    get_json_object(event_json,'$.kv.category') category,"
+arr['newsdetail']="    get_json_object(event_json,'$.kv.entry') entry,
+    get_json_object(event_json,'$.kv.action') action,
+    get_json_object(event_json,'$.kv.newsId') newsId,
+    get_json_object(event_json,'$.kv.showStyle') showStyle,
+    get_json_object(event_json,'$.kv.newsStayTime') newsStayTime,
+    get_json_object(event_json,'$.kv.loadingTime') loadingTime,
+    get_json_object(event_json,'$.kv.type1') type1,
+    get_json_object(event_json,'$.kv.category') category,"
+arr['loading']="    get_json_object(event_json,'$.kv.action') action,
+    get_json_object(event_json,'$.kv.loadingTime') loadingTime,
+    get_json_object(event_json,'$.kv.loadingWay') loadingWay,
+    get_json_object(event_json,'$.kv.extend1') extend1,
+    get_json_object(event_json,'$.kv.extend2') extend2,
+    get_json_object(event_json,'$.kv.type') type,
+    get_json_object(event_json,'$.kv.type1') type1,"
+arr['ad']="    get_json_object(event_json,'$.kv.entry') entry,
+    get_json_object(event_json,'$.kv.action') action,
+    get_json_object(event_json,'$.kv.content') content,
+    get_json_object(event_json,'$.kv.detail') detail,
+    get_json_object(event_json,'$.kv.source') source,
+    get_json_object(event_json,'$.kv.behavior') behavior,
+    get_json_object(event_json,'$.kv.newsType') newsType,
+    get_json_object(event_json,'$.kv.showStyle') showStyle,"
+arr['notification']="    get_json_object(event_json,'$.kv.action') action,
+    get_json_object(event_json,'$.kv.type') type,
+    get_json_object(event_json,'$.kv.apTime') apTime,
+    get_json_object(event_json,'$.kv.content') content,"
+arr['active_foreground']="    get_json_object(event_json,'$.kv.pushId') pushId,
+    get_json_object(event_json,'$.kv.access') access,"
+arr['active_background']="    get_json_object(event_json,'$.kv.activeSource') activeSource,"
+arr['comment']="    get_json_object(event_json,'$.kv.commentId') commentId,
+    get_json_object(event_json,'$.kv.userId') userId,
+    get_json_object(event_json,'$.kv.pCommentId') pCommentId,
+    get_json_object(event_json,'$.kv.content') content,
+    get_json_object(event_json,'$.kv.addTime') addTime,
+    get_json_object(event_json,'$.kv.otherId') otherId,
+    get_json_object(event_json,'$.kv.praiseCount') praiseCount,
+    get_json_object(event_json,'$.kv.replyCount') replyCount,"
+arr['favorites']="    get_json_object(event_json,'$.kv.id') id,
+    get_json_object(event_json,'$.kv.courseId') courseId,
+    get_json_object(event_json,'$.kv.userId') userId,
+    get_json_object(event_json,'$.kv.addTime') addTime,"
+arr['praise']="    get_json_object(event_json,'$.kv.id') id,
+    get_json_object(event_json,'$.kv.userId') userId,
+    get_json_object(event_json,'$.kv.targetId') targetId,
+    get_json_object(event_json,'$.kv.type') type,
+    get_json_object(event_json,'$.kv.addTime') addTime,"
+arr['start']="    get_json_object(event_json,'$.kv.entry') entry,
+    get_json_object(event_json,'$.kv.openAdType') openAdType,
+    get_json_object(event_json,'$.kv.action') action,
+    get_json_object(event_json,'$.kv.loadingTime') loadingTime,
+    get_json_object(event_json,'$.kv.detail') detail,
+    get_json_object(event_json,'$.kv.extend1') extend1,"
+arr['error']="    get_json_object(event_json,'$.kv.errorBrief') errorBrief,
+    get_json_object(event_json,'$.kv.errorDetail') errorDetail,"
+
+
+
+for item in ${!arr[*]}
+do
+	
+	dest="dwd_${item}_log"
+	col=${arr[$item]}
+	event=$item
+	if [ 'start' = $item ]
+	then 
+		src="dwd_base_start_log"
+	else
+		src="dwd_base_event_log"
+	fi 
+sql="insert overwrite table ${dest} partition(dt) select mid_id,
+    user_id,
+    version_code,
+    version_name,
+    lang,
+    source,
+    os,
+    area,
+    model,
+    brand,
+    sdk_version,
+    gmail,
+    height_width,
+    app_time,
+    network,
+    lng,
+    lat,
+    ${col}
+    server_time,
+    dt
+    from ${src} where dt='${log_date}' and event_name='${event}';"
+#	echo "dest->$dest src->$src k-> $item  v-> ${arr[$item]}"
+#	echo "$sql"
+	$hive -e "use $APP;set hive.exec.dynamic.partition.mode=nonstrict;$sql"
+done

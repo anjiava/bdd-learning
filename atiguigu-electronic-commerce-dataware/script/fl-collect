@@ -1,0 +1,20 @@
+#! /bin/bash
+FLUME_HOME=/opt/bdd/apache-flume-1.7.0-bin
+case $1 in
+"start"){
+        for i in node001 node002
+        do
+                echo " --------start $i flume collect job-------"
+                ssh $i "source /etc/profile;nohup $FLUME_HOME/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/job/file-flume-kafka.conf --name collect -Dflume.root.logger=INFO,LOGFILE >/opt/bdd/apache-flume-1.7.0-bin/log/collect.log 2>&1 &"
+        done
+};;
+"stop"){
+        for i in node001 node002
+        do
+                echo " --------stop $i flume collect job-------"
+                ssh $i "source /etc/profile;ps -ef | grep file-flume-kafka | grep -v grep |awk '{print \$2}' | xargs kill"
+        done
+
+};;
+esac
+

@@ -1,0 +1,32 @@
+#!/bin/bash
+APP=gmall
+hive=/opt/bdd/hive-1.2.1/bin/hive
+
+if [ -n $1 ] ;then
+	log_date=$1
+else 
+	log_date=`date -d "-1 day" +%F`  
+fi 
+
+
+sql="
+ 	use gmall;
+	set hive.exec.dynamic.partition.mode=nonstrict;
+	insert into table ads_uv_count
+	select
+	    '$log_date' dt,
+	    day.ct day_count,
+	    wk.ct wk_count,
+	    mn.ct mn_count,
+	    if(date_add((next_day('$log_date','MO')),-1)='$log_date','Y','N') is_weekend,
+	    if(last_day('$log_date')='$log_date','Y','N') is_monthend
+	from
+	    (select '$log_date' dt,count(*) ct from dws_uv_detail_day where dt='$log_date') day
+	join
+	    (select '$log_date' dt,count(*) ct from dws_uv_detail_wk where wk_dt = CONCAT(date_add(next_day('$log_date','MO'),-7),'_',date_add(next_day('$log_date','MO'),-1))) wk
+	on day.dt=wk.dt
+	join
+	    (select '$log_date' dt,count(*) ct from dws_uv_detail_mn where mn =date_format('$log_date','yyyy-MM')) mn
+	on mn.dt=day.dt;
+"
+$hive -e "$sql"

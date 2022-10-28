@@ -1,0 +1,18 @@
+#!/bin/bash
+case $1 in
+"start"){
+	for i in node001 node002 node003
+	do 
+		echo "-------start $i kafka------"
+		ssh $i "source /etc/profile;export JMX_PORT=9988 ; /opt/bdd/kafka-2.11/bin/kafka-server-start.sh -daemon /opt/bdd/kafka-2.11/config/server.properties"
+	done
+};;
+"stop"){
+	for i in node001 node002 node003
+	do 
+		echo "-------stop $i kafka------"
+		ssh $i "/opt/bdd/kafka-2.11/bin/kafka-server-stop.sh stop"
+	done
+};;
+esac
+

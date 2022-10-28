@@ -1,0 +1,119 @@
+#!/bin/bash
+APP=gmall
+hive=/opt/bdd/hive-1.2.1/bin/hive
+
+if [ -n "$1" ]
+then
+	log_date=$1
+else
+	log_date=`date -d "-1 day" +%F`
+fi
+sr=ods_start_log
+dest=dwd_base_start_log
+before_sql="
+	use gmall;
+	add jar /opt/bdd/hive-1.2.1/lib/self/dwd-hive-function-1.0-SNAPSHOT.jar;
+	create temporary function resolve_common as 'org.mili.udf.CommonFieldUDF';
+	create temporary function resolve_event as 'org.mili.udtf.EventFieldUDTF';
+	set hive.exec.dynamic.partition.mode=nonstrict;
+"
+sql="
+insert overwrite table ${dest} PARTITION(dt) select
+        mid_id,
+       user_id,
+       version_code,
+       version_name,
+       lang,
+       source,
+       os,
+       area,
+       model,
+       brand,
+       sdk_version,
+       gmail,
+       height_width,
+       app_time,
+       network,
+       lng,
+       lat,
+       event_name ,
+       event_json ,
+       server_time ,
+       dt
+from
+ (
+    SELECT
+           resolve_common(line,'mid') AS mid_id,
+           resolve_common(line,'uid') AS user_id,
+           resolve_common(line,'vc') AS version_code,
+           resolve_common(line,'vn') AS version_name,
+           resolve_common(line,'l') AS lang,
+           resolve_common(line,'sr') AS source,
+           resolve_common(line,'os') AS os,
+           resolve_common(line,'ar') AS area,
+           resolve_common(line,'md') AS model,
+           resolve_common(line,'ba') AS brand,
+           resolve_common(line,'sv') AS sdk_version,
+           resolve_common(line,'g') AS gmail,
+           resolve_common(line,'hw') AS height_width,
+           resolve_common(line,'t') AS app_time,
+           resolve_common(line,'nw') AS network,
+           resolve_common(line,'ln') AS lng,
+           resolve_common(line,'la') AS lat,
+           resolve_common(line,'server_time') AS server_time,
+           line as ops,
+           dt AS dt
+    from ${sr} where dt='${log_date}'
+ )sdk_log lateral view resolve_event(ops) tmp_k AS event_name,event_json;"
+$hive -e "${before_sql} ${sql}"
+sr=ods_event_log
+dest=dwd_base_event_log
+sql="
+insert overwrite table ${dest} PARTITION(dt) select
+        mid_id,
+       user_id,
+       version_code,
+       version_name,
+       lang,
+       source,
+       os,
+       area,
+       model,
+       brand,
+       sdk_version,
+       gmail,
+       height_width,
+       app_time,
+       network,
+       lng,
+       lat,
+       event_name ,
+       event_json ,
+       server_time ,
+       dt
+from
+ (
+    SELECT
+           resolve_common(line,'mid') AS mid_id,
+           resolve_common(line,'uid') AS user_id,
+           resolve_common(line,'vc') AS version_code,
+           resolve_common(line,'vn') AS version_name,
+           resolve_common(line,'l') AS lang,
+           resolve_common(line,'sr') AS source,
+           resolve_common(line,'os') AS os,
+           resolve_common(line,'ar') AS area,
+           resolve_common(line,'md') AS model,
+           resolve_common(line,'ba') AS brand,
+           resolve_common(line,'sv') AS sdk_version,
+           resolve_common(line,'g') AS gmail,
+           resolve_common(line,'hw') AS height_width,
+           resolve_common(line,'t') AS app_time,
+           resolve_common(line,'nw') AS network,
+           resolve_common(line,'ln') AS lng,
+           resolve_common(line,'la') AS lat,
+           resolve_common(line,'server_time') AS server_time,
+           line as ops,
+           dt AS dt
+    from ${sr} where dt='${log_date}'
+ )sdk_log lateral view resolve_event(ops) tmp_k AS event_name,event_json;"
+$hive -e "${before_sql} ${sql}"

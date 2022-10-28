@@ -1,0 +1,52 @@
+#!/bin/bash
+HOSTS=(node001 node002 node003)
+case $1 in 
+"start"){
+	echo "------- start zookeeper cluster-----"
+	
+	for i in ${HOSTS[@]}
+	do 
+		ssh $i "source /etc/profile ;/opt/bdd/zookeeper-3.4.10/bin/zkServer.sh start"
+
+	done
+
+	echo "------ start hadoop cluster-----"
+	ssh node001 "source /etc/profile; start-dfs.sh;start-yarn.sh"
+	ssh node002 "source /etc/profile; yarn-daemon.sh start resourcemanager"
+	
+	echo "----- start kafka cluster ------"
+        for i in ${HOSTS[@]}
+        do
+		ssh $i "source /etc/profile;export JMX_PORT=9988 ; /opt/bdd/kafka-2.11/bin/kafka-server-start.sh -daemon /opt/bdd/kafka-2.11/config/server.properties"
+        done
+	echo "------start kafka manager-------"
+	ssh node001 "source /etc/profile;export ZK_HOSTS=node001:2181,node002:2181,node003:2181 ; nohup /opt/bdd/kafka-manager-1.3/bin/kafka-manager -Dhttp.port=7456 > /opt/bdd/kafka-manager-1.3/start.log 2>&1 &"
+
+};;
+"stop"){
+	echo "------stop kafka manager-------"
+	ssh node001 "ps -ef | grep ProdServerStart | grep -v grep |awk '{print \$2}' | xargs kill"
+
+        echo "----- stop kafka cluster ------"
+        for i in ${HOSTS[@]}
+        do
+		ssh $i "ps -ef | grep kafka | grep -v grep| awk '{print \$2}' | xargs kill " 
+        done
+
+
+	echo "------ stop hadoop cluster-----"
+	ssh node002 "source /etc/profile; yarn-daemon.sh stop resourcemanager"
+	ssh node001 "source /etc/profile; stop-yarn.sh;stop-dfs.sh"
+
+	echo "------ stop zookeeper cluster-------"
+        for i in ${HOSTS[@]}
+        do
+                ssh $i "source /etc/profile ;/opt/bdd/zookeeper-3.4.10/bin/zkServer.sh stop"
+
+        done
+
+
+};;
+esac
+
+

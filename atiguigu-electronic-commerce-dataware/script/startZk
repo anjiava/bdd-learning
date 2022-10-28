@@ -1,0 +1,6 @@
+#!/bin/bash
+for host in node001 node002 node003
+do
+	echo "--------start $host--------"
+	ssh $host "source /etc/profile ;/opt/bdd/zookeeper-3.4.10/bin/zkServer.sh start"
+done

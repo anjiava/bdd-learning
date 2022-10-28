@@ -1,0 +1,8 @@
+#!/bin/bash
+# 定义jar包的位置
+jar=/opt/bdd/log-collector-1.0-SNAPSHOT-jar-with-dependencies.jar 
+for host in node001 node002 
+do
+  echo "-------$host generate data-----"
+  ssh $host "source /etc/profile;java -classpath $jar org.mili.AppMain &"
+done

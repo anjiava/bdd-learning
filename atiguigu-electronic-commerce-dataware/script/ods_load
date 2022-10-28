@@ -1,0 +1,17 @@
+#!/bin/bash
+
+APP=gmall
+hive=/opt/bdd/hive-1.2.1/bin/hive
+
+if [ -n "$1" ] 
+then
+	log_date=$1
+else
+	echo "--------"
+	log_date=$(date -d '-1 day' +%F)
+fi
+
+echo "loading data in ${log_date}"
+$hive -e "load data inpath '/origin_data/gmall/log/topic_start/$log_date' into table  ${APP}.ods_start_log partition(dt='$log_date')"
+$hive -e "load data inpath '/origin_data/gmall/log/topic_event/$log_date' into table  ${APP}.ods_event_log partition(dt='$log_date')"
+
